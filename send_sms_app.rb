@@ -30,16 +30,16 @@ if account_sid && auth_token
 	parsed_json = JSON.parse(response.body, :symbolize_names => true)
 	parsed_json2= JSON.parse(response2.body, :symbolize_names => true)
 
-	stock_quotes = "for anal bum cover\n"
-	market_quotes= ""
+	stock_quotes = "for anal bum cover\n\n"
+	market_quotes= "\n"
 
 	parsed_json[:quoteResponse][:result].each do |stock|
 		average_price = (stock[:bid]+stock[:ask])/2
 		stock_quotes += "#{stock[:symbol]} $#{average_price}\n"
 	end		
 	
-	parsed_json[:marketSummaryResponse][:result][0..3].each do |fund|
-		market_quotes += "#{fund[:fullExchangeName]}\n"
+	parsed_json2[:marketSummaryResponse][:result][0..2].each do |fund|
+		market_quotes += "#{fund[:fullExchangeName]} #{fund[:regularMarketPrice][:fmt]}\n"
 	end		
 
 	@client = Twilio::REST::Client.new(account_sid, auth_token)
