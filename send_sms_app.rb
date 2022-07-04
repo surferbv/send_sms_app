@@ -1,6 +1,7 @@
 #!/Users/surferbv/.rbenv/versions/2.5.0/bin/ruby
 #example setup 
 #*/1 * * * * cd ~/cron && ruby cron_test.rb >> ~/cron/cron_status.txt 2>&1
+#this is a new blop
 
 require 'json'
 require 'rubygems'
