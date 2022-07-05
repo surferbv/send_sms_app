@@ -41,5 +41,8 @@ PLATFORMS
 DEPENDENCIES
   twilio-ruby (~> 5.68)
 
+RUBY VERSION
+   ruby 2.5.0p0
+
 BUNDLED WITH
    2.3.17
