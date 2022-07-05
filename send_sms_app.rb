@@ -11,17 +11,17 @@ require 'net/http'
 require 'openssl'
 
 account_sid = 'ACa2f13a6ea3a7422120717dac5481e28d'
-auth_token = '4fdf3fce1e05e7784d4538e80a721de2' 
+auth_token = '4e1ba3771bf2782bab29a9b28b8fa5d7' 
 if account_sid && auth_token
 	# stocks
-	url = URI("https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA")
+	# url = URI("https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA")
 	https = Net::HTTP.new(url.host, url.port)
 	https.use_ssl = true
 	request = Net::HTTP::Get.new(url)
 	request["X-API-KEY"] = "CSkBvWrspA8VFYCuxin8G999AXZ584ah7qUUp8bY"
 	response = https.request(request)
 	parsed_json = JSON.parse(response.body, :symbolize_names => true)
-	stock_quotes = "for anal bum cover\n\n"
+	stock_quotes = "for an album cover\n\n"
 	parsed_json[:quoteResponse][:result].each do |stock|
 		average_price = (stock[:bid]+stock[:ask])/2
 		stock_quotes += "#{stock[:symbol]} $#{average_price}\n"
@@ -41,7 +41,7 @@ if account_sid && auth_token
 	end	
 
 	# weather
-	url3= URI("https://api.weather.gov/gridpoints/MTR/88,80/forecast?units=si")	
+	url3= URI("https://api.weather.gov/gridpoints/MTR/98,85/forecast?units=si")	
 	https3  = Net::HTTP.new(url3.host, url3.port)
 	https3.use_ssl = true
 	request3= Net::HTTP::Get.new(url3)
