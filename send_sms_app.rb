@@ -14,7 +14,7 @@ account_sid = 'ACa2f13a6ea3a7422120717dac5481e28d'
 auth_token = '4e1ba3771bf2782bab29a9b28b8fa5d7' 
 if account_sid && auth_token
 	# stocks
-	# url = URI("https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA")
+	url = URI("https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA")
 	https = Net::HTTP.new(url.host, url.port)
 	https.use_ssl = true
 	request = Net::HTTP::Get.new(url)
