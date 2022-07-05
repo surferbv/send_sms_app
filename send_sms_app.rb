@@ -41,7 +41,7 @@ if account_sid && auth_token
 	end	
 
 	# weather
-	url3= URI("https://api.weather.gov/gridpoints/MTR/98,85/forecast?units=si")	
+	url3= URI("https://api.weather.gov/gridpoints/MTR/88,80/forecast?units=si")	
 	https3  = Net::HTTP.new(url3.host, url3.port)
 	https3.use_ssl = true
 	request3= Net::HTTP::Get.new(url3)
