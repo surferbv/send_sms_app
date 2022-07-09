@@ -18,7 +18,7 @@ if account_sid && auth_token
 	https = Net::HTTP.new(url.host, url.port)
 	https.use_ssl = true
 	request = Net::HTTP::Get.new(url)
-	request["X-API-KEY"] = "CSkBvWrspA8VFYCuxin8G999AXZ584ah7qUUp8bY"
+	request["X-API-KEY"] = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
 	response = https.request(request)
 	parsed_json = JSON.parse(response.body, :symbolize_names => true)
 	stock_quotes = "for an album cover\n\n"
@@ -32,7 +32,7 @@ if account_sid && auth_token
 	https2 = Net::HTTP.new(url2.host, url2.port)
 	https2.use_ssl = true
 	request2= Net::HTTP::Get.new(url2) 
-	request2["X-API-KEY"] = "CSkBvWrspA8VFYCuxin8G999AXZ584ah7qUUp8bY"
+	request2["X-API-KEY"] = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
 	response2= https2.request(request2)
 	parsed_json2= JSON.parse(response2.body, :symbolize_names => true)
 	market_quotes= "\n"
