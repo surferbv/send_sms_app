@@ -11,7 +11,7 @@ require 'net/http'
 require 'openssl'
 
 account_sid = 'ACa2f13a6ea3a7422120717dac5481e28d'
-auth_token = '4e1ba3771bf2782bab29a9b28b8fa5d7' 
+auth_token = 'd6d5b7cae39a4790f316967af28b05d0' 
 if account_sid && auth_token
 	# stocks
 	url = URI("https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA")
