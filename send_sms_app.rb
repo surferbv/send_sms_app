@@ -12,15 +12,25 @@ require 'openssl'
 
 account_sid = 'ACa2f13a6ea3a7422120717dac5481e28d'
 auth_token = 'd6d5b7cae39a4790f316967af28b05d0' 
-if account_sid && auth_token
-	# stocks
-	url = URI("https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA")
-	https = Net::HTTP.new(url.host, url.port)
+
+def fetch_it(url,key)
+	uri_url = URI(url)
+	https = Net::HTTP.new(uri_url.host, uri_url.port)
 	https.use_ssl = true
-	request = Net::HTTP::Get.new(url)
-	request["X-API-KEY"] = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
+	request = Net::HTTP::Get.new(uri_url)
+	request["X-API-KEY"] = key
 	response = https.request(request)
 	parsed_json = JSON.parse(response.body, :symbolize_names => true)
+end
+
+if account_sid && auth_token
+
+	# stocks
+	url = "https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA"
+	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
+
+	parsed_json = fetch_it(url, key)
+	
 	stock_quotes = "for an album cover\n\n"
 	parsed_json[:quoteResponse][:result].each do |stock|
 		average_price = (stock[:bid]+stock[:ask])/2
@@ -28,13 +38,11 @@ if account_sid && auth_token
 	end	
 
 	# markts
-	url2= URI("https://yfapi.net/v6/finance/quote/marketSummary?lang=en&region=US")
-	https2 = Net::HTTP.new(url2.host, url2.port)
-	https2.use_ssl = true
-	request2= Net::HTTP::Get.new(url2) 
-	request2["X-API-KEY"] = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
-	response2= https2.request(request2)
-	parsed_json2= JSON.parse(response2.body, :symbolize_names => true)
+	url = "https://yfapi.net/v6/finance/quote/marketSummary?lang=en&region=US"
+	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
+
+	parsed_json2 = fetch_it(url, key)
+	
 	market_quotes= "\n"
 	parsed_json2[:marketSummaryResponse][:result][0..2].each do |fund|
 		market_quotes += "#{fund[:fullExchangeName]} #{fund[:regularMarketPrice][:fmt]}\n"
@@ -47,6 +55,7 @@ if account_sid && auth_token
 	request3= Net::HTTP::Get.new(url3)
 	response3= https3.request(request3)
 	parsed_json3= JSON.parse(response3.body, :symbolize_names => true)
+	
 	weather = "\n"
 	weather = "#{parsed_json3[:properties][:periods][0][:detailedForecast]}"
 
