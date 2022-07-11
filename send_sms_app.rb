@@ -13,23 +13,29 @@ require 'openssl'
 account_sid = 'ACa2f13a6ea3a7422120717dac5481e28d'
 auth_token = 'd6d5b7cae39a4790f316967af28b05d0' 
 
-def fetch_it(url,key)
+def fetch_it(caller, url, key = '')
+	parsed_json = ''
 	uri_url = URI(url)
 	https = Net::HTTP.new(uri_url.host, uri_url.port)
 	https.use_ssl = true
 	request = Net::HTTP::Get.new(uri_url)
-	request["X-API-KEY"] = key
+	request["X-API-KEY"] = key if !key.empty?
 	response = https.request(request)
-	parsed_json = JSON.parse(response.body, :symbolize_names => true)
+	if response.is_a?(Net::HTTPSuccess)
+		parsed_json = JSON.parse(response.body, :symbolize_names => true)
+	else
+		parsed_json = caller + " " + response.code
+	end
+	parsed_json
 end
 
 if account_sid && auth_token
 
 	# stocks
+	caller = "Stock call"
 	url = "https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA"
 	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
-
-	parsed_json = fetch_it(url, key)
+	parsed_json = fetch_it(caller, url, key)
 	
 	stock_quotes = "for an album cover\n\n"
 	parsed_json[:quoteResponse][:result].each do |stock|
@@ -38,10 +44,10 @@ if account_sid && auth_token
 	end	
 
 	# markts
+	caller = "Market call"
 	url = "https://yfapi.net/v6/finance/quote/marketSummary?lang=en&region=US"
 	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
-
-	parsed_json2 = fetch_it(url, key)
+	parsed_json2 = fetch_it(caller, url, key)
 	
 	market_quotes= "\n"
 	parsed_json2[:marketSummaryResponse][:result][0..2].each do |fund|
@@ -49,12 +55,9 @@ if account_sid && auth_token
 	end	
 
 	# weather
-	url3= URI("https://api.weather.gov/gridpoints/MTR/88,80/forecast?units=si")	
-	https3  = Net::HTTP.new(url3.host, url3.port)
-	https3.use_ssl = true
-	request3= Net::HTTP::Get.new(url3)
-	response3= https3.request(request3)
-	parsed_json3= JSON.parse(response3.body, :symbolize_names => true)
+	caller = "Weather call"
+	url = "https://api.weather.gov/gridpoints/MTR/88,80/forecast?units=si"
+	parsed_json3= fetch_it(caller, url, key)
 	
 	weather = "\n"
 	weather = "#{parsed_json3[:properties][:periods][0][:detailedForecast]}"
