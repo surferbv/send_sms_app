@@ -11,10 +11,11 @@ require 'net/http'
 require 'openssl'
 
 account_sid = 'ACa2f13a6ea3a7422120717dac5481e28d'
-auth_token = 'd6d5b7cae39a4790f316967af28b05d0' 
+auth_token = '3c6b003b04eb668aa41e731b26f72f0b' 
 
 def fetch_it(caller, url, key = '')
-	parsed_json = ''
+	response = Struct.new( :code, :response)
+	parsed_json = response.new('','')
 	uri_url = URI(url)
 	https = Net::HTTP.new(uri_url.host, uri_url.port)
 	https.use_ssl = true
@@ -22,14 +23,17 @@ def fetch_it(caller, url, key = '')
 	request["X-API-KEY"] = key if !key.empty?
 	response = https.request(request)
 	if response.is_a?(Net::HTTPSuccess)
-		parsed_json = JSON.parse(response.body, :symbolize_names => true)
+		parsed_json.code = response.code
+		parsed_json.response = JSON.parse(response.body, :symbolize_names => true)
 	else
-		parsed_json = caller + " " + response.code
+		parsed_json.code = response.code
+		parsed_json.response = caller
 	end
 	parsed_json
 end
 
 if account_sid && auth_token
+	result = ""
 
 	# stocks
 	caller = "Stock call"
@@ -37,36 +41,49 @@ if account_sid && auth_token
 	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
 	parsed_json = fetch_it(caller, url, key)
 	
-	stock_quotes = "for an album cover\n\n"
-	parsed_json[:quoteResponse][:result].each do |stock|
-		average_price = (stock[:bid]+stock[:ask])/2
-		stock_quotes += "#{stock[:symbol]} $#{average_price}\n"
-	end	
+	if parsed_json.code == '200'
+		result += "for an album cover\n\n"
+		parsed_json.response[:quoteResponse][:result].each do |stock|
+			average_price = (stock[:bid]+stock[:ask])/2
+			result += "#{stock[:symbol]} $#{average_price}\n"
+		end	
+	
+	else
+		result += parsed_json.response + parsed_json.code
+	end
 
 	# markts
 	caller = "Market call"
 	url = "https://yfapi.net/v6/finance/quote/marketSummary?lang=en&region=US"
 	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
-	parsed_json2 = fetch_it(caller, url, key)
-	
-	market_quotes= "\n"
-	parsed_json2[:marketSummaryResponse][:result][0..2].each do |fund|
-		market_quotes += "#{fund[:fullExchangeName]} #{fund[:regularMarketPrice][:fmt]}\n"
-	end	
+	parsed_json = fetch_it(caller, url, key)
 
+	if parsed_json.code == '200'
+		result += "\n"
+		parsed_json.response[:marketSummaryResponse][:result][0..2].each do |fund|
+			result += "#{fund[:fullExchangeName]} #{fund[:regularMarketPrice][:fmt]}\n"
+		end	
+	else
+		result += parsed_json.response + parsed_json.code
+	end
+	
 	# weather
 	caller = "Weather call"
 	url = "https://api.weather.gov/gridpoints/MTR/88,80/forecast?units=si"
-	parsed_json3= fetch_it(caller, url, key)
-	
-	weather = "\n"
-	weather = "#{parsed_json3[:properties][:periods][0][:detailedForecast]}"
+	parsed_json = fetch_it(caller, url, key)
 
+	if parsed_json.code = '200'
+		result += "\n"
+		result += "#{parsed_json.response[:properties][:periods][0][:detailedForecast]}"
+	else
+		result += parsed_json.response + parsed_json.code
+	end
+	
 	# twillio message
 	@client = Twilio::REST::Client.new(account_sid, auth_token)
 	message = @client.messages
 	  .create(
-	     body: stock_quotes + market_quotes + "\n" + weather,
+	     body: result,
 	     from: '+19472256784',
 	     to: '+16505358869'
 	   )
