@@ -36,7 +36,7 @@ if account_sid && auth_token
 	result = ""
 
 	# stocks
-	caller = "Stock call"
+	caller = "Stock call "
 	url = "https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA"
 	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
 	parsed_json = fetch_it(caller, url, key)
@@ -53,7 +53,7 @@ if account_sid && auth_token
 	end
 
 	# markts
-	caller = "Market call"
+	caller = "Market call "
 	url = "https://yfapi.net/v6/finance/quote/marketSummary?lang=en&region=US"
 	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
 	parsed_json = fetch_it(caller, url, key)
@@ -68,7 +68,7 @@ if account_sid && auth_token
 	end
 	
 	# weather
-	caller = "Weather call"
+	caller = "Weather call "
 	url = "https://api.weather.gov/gridpoints/MTR/88,80/forecast?units=si"
 	parsed_json = fetch_it(caller, url, key)
 
