@@ -9,6 +9,4 @@ gem 'secret_keys', '~> 1.0', '>= 1.0.1'
 gem 'openssl', '~> 3.0'
 gem 'pry'
 
-group :development do
-  gem 'byebug'
-end
+gem 'byebug'
