@@ -1,9 +1,14 @@
 source 'https://rubygems.org'
+
 ruby '3.1.0'
+
 gem 'nokogiri', '~> 1.13', '>= 1.13.6'
 gem 'twilio-ruby', '~> 5.68'
 gem 'credentials_manager'
 gem 'secret_keys', '~> 1.0', '>= 1.0.1'
-gem 'byebug'
 gem 'openssl', '~> 3.0'
 gem 'pry'
+
+group :development do
+  gem 'byebug'
+end
