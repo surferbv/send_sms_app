@@ -10,76 +10,100 @@ require 'uri'
 require 'net/http'
 require 'openssl'
 require 'pry'
+require 'secret_keys'
+require 'byebug'
 
-account_sid = 'ACa2f13a6ea3a7422120717dac5481e28d'
-auth_token = 'a7743c848bc2934d9a6be9d22e6e4432' 
+secrets = SecretKeys.new("credentials.yaml", ENV['SMS_KEY'])
+account_sid = secrets['api_keys']['TWILIO_ACCOUNT_SID']
+auth_token = secrets['api_keys']['TWILIO_AUTH_TOKEN']
+marketstack_key = secrets['api_keys']['MARKETSTACK']
 
-def fetch_it(caller, url, key = '')
-	res_struct = Struct.new( :code, :response)
-	parsed_json_struct = res_struct.new('','')
-	uri_url = URI(url)
-	https = Net::HTTP.new(uri_url.host, uri_url.port)
-	https.use_ssl = true
-	request = Net::HTTP::Get.new(uri_url)
-	request["X-API-KEY"] = key if !key.empty?
-	res_struct = https.request(request)
-	if res_struct.is_a?(Net::HTTPSuccess)
-		parsed_json_struct.code = res_struct.code
-		parsed_json_struct.response = JSON.parse(res_struct.body, :symbolize_names => true)
+Response = Struct.new( :code, :body)
+
+def fetch_it(caller, http_req)
+	http    = http_req[:http]
+	request = http_req[:request]
+
+	i = 0
+	begin
+		actual_response = http.request(request)
+		response = Response.new('','')
+		response.code = actual_response.code
+		i+=1
+	end until response.code == '200' || i > 4
+
+	if actual_response.is_a?(Net::HTTPSuccess)
+		response.body = JSON.parse(actual_response.body, :symbolize_names => true)
 	else
-		parsed_json_struct.code = res_struct.code
-		parsed_json_struct.response = caller
+		response.body = caller
 	end
-	parsed_json_struct
+	response
+end
+
+def build_http_req(url, params, is_use_ssl = false, is_verify_mod = false)
+	url = URI(url)
+	url.query = URI.encode_www_form(params)
+
+	http = Net::HTTP.new(url.host, url.port)
+	request = Net::HTTP::Get.new(url)
+
+	http.use_ssl = is_use_ssl
+	http.verify_mode = OpenSSL::SSL::VERIFY_NONE if is_verify_mod
+
+	return {http: http, request: request}
 end
 
 if account_sid && auth_token
-	result = ""
+	result = "Stock and weather report\n\n"
 
 	# stocks
-	caller = "Stock call "
-	url = "https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=SPY,QQQ,DIA"
-	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
-	parsed_json = fetch_it(caller, url, key)
-	
-	if parsed_json.code == '200'
-		result += "for an album cover\n\n"
-		parsed_json.response[:quoteResponse][:result].each do |stock|
-			average_price = (stock[:bid]+stock[:ask])/2
-			result += "#{stock[:symbol]} $#{average_price}\n"
-		end	
-	
-	else
-		result += parsed_json.response + parsed_json.code
+	caller = "Stock api "
+	url = "http://api.marketstack.com/v1/eod"
+  dia_params = {access_key: marketstack_key, symbols: 'DIA', limit: 1}
+  spy_params = {access_key: marketstack_key, symbols: 'SPY', limit: 1}
+  qqq_params = {access_key: marketstack_key, symbols: 'QQQ', limit: 1}
+
+  stock_params = [dia_params, spy_params, qqq_params]
+
+  # build http request and fetch it
+  stock_params.each do |stock_param|
+		http_req = build_http_req(url, stock_param)
+		response = fetch_it(caller + stock_param[:symbols], http_req)
+
+		if response.code == '200'
+			response.body[:data].each do |stock|
+				average_price = (stock[:high]+stock[:low])/2
+				result += "#{stock[:symbol]} $#{average_price}\n"
+			end
+			puts "Successful response from stock api\n\n"
+		else
+			res = response.body + response.code
+			result += res
+			puts "Failed to call and parsed stock api"
+			puts "#{res} \n\n"
+		end
 	end
 
-	# markts
-	caller = "Market call "
-	url = "https://yfapi.net/v6/finance/quote/marketSummary?lang=en&region=US"
-	key = "XH0aRuUjD22JnrmyJQSTL53LaKbxG7XdNb7xUfl5"
-	parsed_json = fetch_it(caller, url, key)
-
-	if parsed_json.code == '200'
-		result += "\n"
-		parsed_json.response[:marketSummaryResponse][:result][0..2].each do |fund|
-			result += "#{fund[:fullExchangeName]} #{fund[:regularMarketPrice][:fmt]}\n"
-		end	
-	else
-		result += parsed_json.response + parsed_json.code
-	end
-	
 	# weather
-	caller = "Weather call "
-	url = "https://api.weather.gov/gridpoints/MTR/88,80/forecast?units=si"
-	parsed_json_struct = fetch_it(caller, url, key)
+	caller = "Weather api "
+	url = "https://api.weather.gov/gridpoints/MTR/88,80/forecast"
+  weather_params = {units: 'si'}
 
-	if parsed_json_struct.code = '200'
+  # build http request and fetch it
+  http_req = build_http_req(url, weather_params, true, true)
+	response = fetch_it(caller, http_req)
+
+	if response.code == '200' && !response.is_a?(String)
+		puts "Successful response from weather api\n\n"
 		result += "\n"
-		parsed_json_struct.response.key?("properties") ? result : result += "properties missing"
-		parsed_json_struct.response.key?("periods") ? result : result += " periods missing"
-		result += "#{parsed_json_struct.response[:properties][:periods][0][:detailedForecast]}" if !result.include?("missing")
-	else
-		result += parsed_json_struct.response + parsed_json_struct.code
+		response.body.key?(:properties) ? result : result += "#{caller} properties missing\n"
+		response.body[:properties].key?(:periods) ? result : result += "#{caller} periods missing\n\n"
+    result += "#{response.body[:properties][:periods][0][:detailedForecast]}" if !result.include?("missing")
+  else
+    res = response.body + response.code
+		result += res
+		puts "Failed to call and parsed weather api"
+    puts "#{res} \n\n"
 	end
 	
 	# twillio message
