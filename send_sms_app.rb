@@ -17,6 +17,7 @@ secrets = SecretKeys.new("credentials.yaml", ENV['SMS_KEY'])
 account_sid = secrets['api_keys']['TWILIO_ACCOUNT_SID']
 auth_token = secrets['api_keys']['TWILIO_AUTH_TOKEN']
 marketstack_key = secrets['api_keys']['MARKETSTACK']
+twelve_api_key = secrets['api_key']['TWELVE']
 
 Response = Struct.new( :code, :body)
 
