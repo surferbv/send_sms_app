@@ -16,8 +16,7 @@ require 'byebug'
 secrets = SecretKeys.new("credentials.yaml", ENV['SMS_KEY'])
 account_sid = secrets['api_keys']['TWILIO_ACCOUNT_SID']
 auth_token = secrets['api_keys']['TWILIO_AUTH_TOKEN']
-marketstack_key = secrets['api_keys']['MARKETSTACK']
-twelve_api_key = secrets['api_key']['TWELVE']
+twelve_api_key = secrets['api_keys']['TWELVE']
 
 Response = Struct.new( :code, :body)
 
@@ -59,30 +58,29 @@ if account_sid && auth_token
 
 	# stocks
 	caller = "Stock api "
-	url = "http://api.marketstack.com/v1/eod"
-  dia_params = {access_key: marketstack_key, symbols: 'DIA', limit: 1}
-  spy_params = {access_key: marketstack_key, symbols: 'SPY', limit: 1}
-  qqq_params = {access_key: marketstack_key, symbols: 'QQQ', limit: 1}
+	url = "https://api.twelvedata.com/quote"
+  params = {symbol: 'DIA,QQQ,SPY,DJI,GSPC,VOO,VIX', apikey: twelve_api_key, }
 
-  stock_params = [dia_params, spy_params, qqq_params]
+	# build http request and fetch it
+	http_req = build_http_req(url, params, true, true)
+	response = fetch_it(caller + params[:symbol], http_req)
 
-  # build http request and fetch it
-  stock_params.each do |stock_param|
-		http_req = build_http_req(url, stock_param)
-		response = fetch_it(caller + stock_param[:symbols], http_req)
-
-		if response.code == '200'
-			response.body[:data].each do |stock|
-				average_price = (stock[:high]+stock[:low])/2
-				result += "#{stock[:symbol]} $#{average_price}\n"
-			end
-			puts "Successful response from stock api\n\n"
-		else
-			res = response.body + response.code
-			result += res
-			puts "Failed to call and parsed stock api"
-			puts "#{res} \n\n"
+	if response.code == '200'
+    symbol_keys = response.body.keys
+    symbol_keys.each do |key|
+      stock = response.body[key]
+      name = stock[:name]
+			average_price = (stock[:high].to_f + stock[:low].to_f).round(2) / 2
+      percent_change = "#{stock[:percent_change].to_f.round(2)} %"
+			result += "#{name}\n $#{average_price}\n #{percent_change}\n\n"
 		end
+
+		puts "Successful response from stock api\n\n"
+	else
+		res = response.body + response.code
+		result += res
+		puts "Failed to call and parsed stock api"
+		puts "#{res} \n\n"
 	end
 
 	# weather
